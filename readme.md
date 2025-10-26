@@ -1,5 +1,5 @@
 # Crappy Chess
-This is a crappy Chess game that I am currently writing for two purposes:
+This is a crappy chess game that I am currently writing for two purposes:
 - To learn SDL3
 - I hate the unfinished OOP slop attempt at a chess game that I did in my first year at university and want to write it in C instead
 
