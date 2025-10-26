@@ -477,74 +477,14 @@ uint64_t _visible_to_king(int row, int col) {
 
     bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE;
 
-    int row_positive = row + 1;
-    int row_negative = row - 1;
-    int col_positive = col + 1;
-    int col_negative = col - 1;
-
-    bool row_positive_in_bounds = row_in_bounds(row_positive);
-    bool row_negative_in_bounds = row_in_bounds(row_negative);
-    bool col_positive_in_bounds = col_in_bounds(col_positive);
-    bool col_negative_in_bounds = col_in_bounds(col_negative);
-
-    if (row_negative_in_bounds) {
-        if (col_negative_in_bounds) {
-            
-        }
-
-        {
-            int index = coord_hash(row_negative, col);
-            PieceType target = global_context.piece_state.flattened[index].type;
-            bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
-            result |= (uint64_t)can_access << index;
-        }
-
-        if (col_positive_in_bounds) {
-            int index = coord_hash(row_negative, col_positive);
-            PieceType target = global_context.piece_state.flattened[index].type;
-            bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
-            result |= (uint64_t)can_access << index;
-        }
-    }
-
-    {
-        if (col_negative_in_bounds) {
-            int index = coord_hash(row, col_negative);
-            PieceType target = global_context.piece_state.flattened[index].type;
-            bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
-            result |= (uint64_t)can_access << index;
-        }
-
-        if (col_positive_in_bounds) {
-            int index = coord_hash(row, col_positive);
-            PieceType target = global_context.piece_state.flattened[index].type;
-            bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
-            result |= (uint64_t)can_access << index;
-        }
-    }
-
-    if (row_positive_in_bounds) {
-        if (col_negative_in_bounds) {
-            int index = coord_hash(row_positive, col_negative);
-            PieceType target = global_context.piece_state.flattened[index].type;
-            bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
-            result |= (uint64_t)can_access << index;
-        }
-
-        {
-            int index = coord_hash(row_positive, col);
-            PieceType target = global_context.piece_state.flattened[index].type;
-            bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
-            result |= (uint64_t)can_access << index;
-        }
-
-        if (col_positive_in_bounds) {
-            int index = coord_hash(row_positive, col_positive);
-            PieceType target = global_context.piece_state.flattened[index].type;
-            bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
-            result |= (uint64_t)can_access << index;
-        }
-    }
+    result |= (uint64_t)can_access_square(row - 1, col - 1, is_white) << coord_hash(row - 1, col - 1);
+    result |= (uint64_t)can_access_square(row - 1, col    , is_white) << coord_hash(row - 1, col    );
+    result |= (uint64_t)can_access_square(row - 1, col + 1, is_white) << coord_hash(row - 1, col + 1);
+    result |= (uint64_t)can_access_square(row - 1, col - 1, is_white) << coord_hash(row    , col - 1);
+    result |= (uint64_t)can_access_square(row - 1, col + 1, is_white) << coord_hash(row    , col + 1);
+    result |= (uint64_t)can_access_square(row - 1, col - 1, is_white) << coord_hash(row + 1, col - 1);
+    result |= (uint64_t)can_access_square(row - 1, col    , is_white) << coord_hash(row + 1, col    );
+    result |= (uint64_t)can_access_square(row - 1, col + 1, is_white) << coord_hash(row + 1, col + 1);
 
     return result;
 }
