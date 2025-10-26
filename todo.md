@@ -21,7 +21,7 @@
     - Bishop
     - Rook
     - Queen
-  - **In-Progress:
+  - **In-Progress:**
     - Pawn
       - En passant not implemented
     - King highlighting
