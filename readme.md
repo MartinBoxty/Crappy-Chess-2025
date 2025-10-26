@@ -1,7 +1,7 @@
 # Crappy Chess
 This is a crappy Chess game that I am currently writing for two purposes:
 - To learn SDL3
-- I hate the unfinished OOP slop attempt at a chess game that I did in my first year at Uni and want to write it in C instead
+- I hate the unfinished OOP slop attempt at a chess game that I did in my first year at university and want to write it in C instead
 
 This is not something that is intended to be "published", and this public repository is mostly just for record-keeping. Feel free to read the source code to get a feel for what my coding style looks like when I'm not beholden to other people's opinions.
 
