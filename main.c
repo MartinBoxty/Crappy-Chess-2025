@@ -477,14 +477,19 @@ uint64_t _visible_to_king(int row, int col) {
 
     bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE;
 
+    int row_positive = row + 1;
+    int row_negative = row - 1;
+    int col_positive = col + 1;
+    int col_negative = col - 1;
+
     result |= (uint64_t)can_access_square(row - 1, col - 1, is_white) << coord_hash(row - 1, col - 1);
     result |= (uint64_t)can_access_square(row - 1, col    , is_white) << coord_hash(row - 1, col    );
     result |= (uint64_t)can_access_square(row - 1, col + 1, is_white) << coord_hash(row - 1, col + 1);
-    result |= (uint64_t)can_access_square(row - 1, col - 1, is_white) << coord_hash(row    , col - 1);
-    result |= (uint64_t)can_access_square(row - 1, col + 1, is_white) << coord_hash(row    , col + 1);
-    result |= (uint64_t)can_access_square(row - 1, col - 1, is_white) << coord_hash(row + 1, col - 1);
-    result |= (uint64_t)can_access_square(row - 1, col    , is_white) << coord_hash(row + 1, col    );
-    result |= (uint64_t)can_access_square(row - 1, col + 1, is_white) << coord_hash(row + 1, col + 1);
+    result |= (uint64_t)can_access_square(row    , col - 1, is_white) << coord_hash(row    , col - 1);
+    result |= (uint64_t)can_access_square(row    , col + 1, is_white) << coord_hash(row    , col + 1);
+    result |= (uint64_t)can_access_square(row + 1, col - 1, is_white) << coord_hash(row + 1, col - 1);
+    result |= (uint64_t)can_access_square(row + 1, col    , is_white) << coord_hash(row + 1, col    );
+    result |= (uint64_t)can_access_square(row + 1, col + 1, is_white) << coord_hash(row + 1, col + 1);
 
     return result;
 }
