@@ -107,10 +107,6 @@ void _context_init_board_state() {
     global_context.piece_state.grid[7][5].type = PIECE_TYPE_BISHOP_WHITE;
     global_context.piece_state.grid[7][6].type = PIECE_TYPE_KNIGHT_WHITE;
     global_context.piece_state.grid[7][7].type = PIECE_TYPE_ROOK_WHITE;
-
-    // debug
-
-    global_context.piece_state.grid[4][4].type = PIECE_TYPE_KING_WHITE;
 }
 
 bool context_initialise() {
@@ -578,13 +574,6 @@ void _highlight_king(int row, int col) {
     {
         if (col_negative_in_bounds) {
             int index = coord_hash(row, col_negative);
-            PieceType target = global_context.piece_state.flattened[index].type;
-            bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
-            global_context.highlight_state |= (uint64_t)can_access << index;
-        }
-
-        {
-            int index = coord_hash(row, col);
             PieceType target = global_context.piece_state.flattened[index].type;
             bool can_access = target == PIECE_TYPE_NONE || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
             global_context.highlight_state |= (uint64_t)can_access << index;
