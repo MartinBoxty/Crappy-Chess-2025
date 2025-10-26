@@ -14,13 +14,24 @@
 ## Continuous Work
 - Input logic / handling
 
-## Partially complete
-- Pawn highlighting
-  - En passant not implemented
-- King highlighting
-  - Can still access squares that are controlled by opposing piece vision
+## In Progress
+- Piece highlighting
+  - **Completed:**
+    - Knight
+    - Bishop
+    - Rook
+    - Queen
+  - **In-Progress:
+    - Pawn
+      - En passant not implemented
+    - King highlighting
+      - Can still access squares that are controlled by opposing piece vision
 
 ## Complete
 - Rendering grid based on program state
 - Highlighting grid based on program state
 - Rendering piece sprites
+- Knight highlighting
+- Bishop Highlighting
+- Rook Highlighting
+- Queen Highlighting
