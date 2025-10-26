@@ -13,7 +13,7 @@ If you have somehow stumbled onto this of your own accord and wish to download a
 - **SDL_image 3.2.4:** https://github.com/libsdl-org/SDL_image/releases/tag/release-3.2.4
 
 ### C standard:
-C11
+C11 with GCC extensions
 
 ### Compiler:
 GCC 15.2.0
