@@ -388,7 +388,7 @@ void _highlight_rook(int row, int col) {
     SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_ROOK_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_ROOK_BLACK);
     SDL_assert(global_context.highlight_state == 0ull);
 
-    bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_BISHOP_WHITE;
+    bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_ROOK_WHITE;
 
     for (int col_target = col - 1; col_target >= 0; --col_target) {
         int index = coord_hash(row, col_target);
@@ -440,7 +440,7 @@ void _highlight_queen(int row, int col) {
     SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_QUEEN_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_QUEEN_BLACK);
     SDL_assert(global_context.highlight_state == 0ull);
 
-    bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_BISHOP_WHITE;
+    bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_QUEEN_WHITE;
 
     for (int col_target = col - 1; col_target >= 0; --col_target) {
         int index = coord_hash(row, col_target);
