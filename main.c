@@ -435,6 +435,102 @@ void _highlight_rook(int row, int col) {
     }
 }
 
+void _highlight_queen(int row, int col) {
+    SDL_assert(row >= 0 && row < NUM_ROWS && col >= 0 && col < NUM_COLS);
+    SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_QUEEN_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_QUEEN_BLACK);
+    SDL_assert(global_context.highlight_state == 0ull);
+
+    bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_BISHOP_WHITE;
+
+    for (int col_target = col - 1; col_target >= 0; --col_target) {
+        int index = coord_hash(row, col_target);
+        PieceType target = global_context.piece_state.flattened[index].type;
+        bool blocked = target != PIECE_TYPE_NONE;
+        bool can_access = !blocked || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
+        global_context.highlight_state |= (uint64_t)can_access << index;
+        if (blocked) {
+            break;
+        }
+    }
+
+    for (int col_target = col + 1; col_target < NUM_COLS; ++col_target) {
+        int index = coord_hash(row, col_target);
+        PieceType target = global_context.piece_state.flattened[index].type;
+        bool blocked = target != PIECE_TYPE_NONE;
+        bool can_access = !blocked || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
+        global_context.highlight_state |= (uint64_t)can_access << index;
+        if (blocked) {
+            break;
+        }
+    }
+
+    for (int row_target = row - 1; row_target >= 0; --row_target) {
+        int index = coord_hash(row_target, col);
+        PieceType target = global_context.piece_state.flattened[index].type;
+        bool blocked = target != PIECE_TYPE_NONE;
+        bool can_access = !blocked || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
+        global_context.highlight_state |= (uint64_t)can_access << index;
+        if (blocked) {
+            break;
+        }
+    }
+
+    for (int row_target = row + 1; row_target < NUM_ROWS; ++row_target) {
+        int index = coord_hash(row_target, col);
+        PieceType target = global_context.piece_state.flattened[index].type;
+        bool blocked = target != PIECE_TYPE_NONE;
+        bool can_access = !blocked || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
+        global_context.highlight_state |= (uint64_t)can_access << index;
+        if (blocked) {
+            break;
+        }
+    }
+
+    for (int row_target = row + 1, col_target = col + 1; row_target < NUM_ROWS && col_target < NUM_COLS; ++row_target, ++col_target) {
+        int index = coord_hash(row_target, col_target);
+        PieceType target = global_context.piece_state.flattened[index].type;
+        bool blocked = target != PIECE_TYPE_NONE;
+        bool can_access = !blocked || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
+        global_context.highlight_state |= (uint64_t)can_access << index;
+        if (blocked) {
+            break;
+        }
+    }
+
+    for (int row_target = row + 1, col_target = col - 1; row_target < NUM_ROWS && col_target >= 0; ++row_target, --col_target) {
+        int index = coord_hash(row_target, col_target);
+        PieceType target = global_context.piece_state.flattened[index].type;
+        bool blocked = target != PIECE_TYPE_NONE;
+        bool can_access = !blocked || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
+        global_context.highlight_state |= (uint64_t)can_access << index;
+        if (blocked) {
+            break;
+        }
+    }
+
+    for (int row_target = row - 1, col_target = col + 1; row_target >= 0 && col_target < NUM_COLS; --row_target, ++col_target) {
+        int index = coord_hash(row_target, col_target);
+        PieceType target = global_context.piece_state.flattened[index].type;
+        bool blocked = target != PIECE_TYPE_NONE;
+        bool can_access = !blocked || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
+        global_context.highlight_state |= (uint64_t)can_access << index;
+        if (blocked) {
+            break;
+        }
+    }
+
+    for (int row_target = row - 1, col_target = col - 1; row_target >= 0 && col_target >= 0; --row_target, --col_target) {
+        int index = coord_hash(row_target, col_target);
+        PieceType target = global_context.piece_state.flattened[index].type;
+        bool blocked = target != PIECE_TYPE_NONE;
+        bool can_access = !blocked || (is_white ? PieceType_is_black(target) : PieceType_is_white(target));
+        global_context.highlight_state |= (uint64_t)can_access << index;
+        if (blocked) {
+            break;
+        }
+    }
+}
+
 void update_highlight_state(float mouse_up_pos_x, float mouse_up_pos_y) {
     int board_width, board_height;
     SDL_GetWindowSize(global_context.window, &board_width, &board_height);
@@ -473,7 +569,7 @@ void update_highlight_state(float mouse_up_pos_x, float mouse_up_pos_y) {
                 break;
             case PIECE_TYPE_QUEEN_WHITE:
             case PIECE_TYPE_QUEEN_BLACK:
-                //todo
+                _highlight_queen(mouse_up_row, mouse_up_col);
                 break;
             case PIECE_TYPE_KING_WHITE:
             case PIECE_TYPE_KING_BLACK:
