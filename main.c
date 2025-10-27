@@ -268,6 +268,23 @@ uint64_t _visible_to_pawn(int row, int col) {
     return result;
 }
 
+uint64_t _controlled_by_pawn(int row, int col) {
+    SDL_assert(coord_in_bounds(row, col));
+    SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_PAWN_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_PAWN_BLACK);
+
+    uint64_t result = {0};
+
+    bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_PAWN_WHITE;
+    int row_next = row + (is_white ? -1 : 1);
+    int col_positive = col + 1;
+    int col_negative = col - 1;
+
+    result |= (uint64_t)can_access_square(row_next, col_positive, is_white) << coord_hash(row_next, col_positive);
+    result |= (uint64_t)can_access_square(row_next, col_negative, is_white) << coord_hash(row_next, col_negative);
+    
+    return result;
+}
+
 uint64_t _visible_to_knight(int row, int col) {
     SDL_assert(row >= 0 && row < NUM_ROWS && col >= 0 && col < NUM_COLS);
     SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_KNIGHT_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_KNIGHT_BLACK);
@@ -317,32 +334,28 @@ uint64_t _visible_to_bishop(int row, int col) {
 
     for (int row_target = row + 1, col_target = col + 1; row_target < NUM_ROWS && col_target < NUM_COLS; ++row_target, ++col_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col_target, is_white) << coord_hash(row_target, col_target);
-        int index = coord_hash(row_target, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row + 1, col_target = col - 1; row_target < NUM_ROWS && col_target >= 0; ++row_target, --col_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col_target, is_white) << coord_hash(row_target, col_target);
-        int index = coord_hash(row_target, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row - 1, col_target = col + 1; row_target >= 0 && col_target < NUM_COLS; --row_target, ++col_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col_target, is_white) << coord_hash(row_target, col_target);
-        int index = coord_hash(row_target, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row - 1, col_target = col - 1; row_target >= 0 && col_target >= 0; --row_target, --col_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col_target, is_white) << coord_hash(row_target, col_target);
-        int index = coord_hash(row_target, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
@@ -360,32 +373,28 @@ uint64_t _visible_to_rook(int row, int col) {
 
     for (int col_target = col - 1; col_target >= 0; --col_target) {
         result |= (uint64_t)can_access_square_unchecked(row, col_target, is_white) << coord_hash(row, col_target);
-        int index = coord_hash(row, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int col_target = col + 1; col_target < NUM_COLS; ++col_target) {
         result |= (uint64_t)can_access_square_unchecked(row, col_target, is_white) << coord_hash(row, col_target);
-        int index = coord_hash(row, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row - 1; row_target >= 0; --row_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col, is_white) << coord_hash(row_target, col);
-        int index = coord_hash(row_target, col);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row + 1; row_target < NUM_ROWS; ++row_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col, is_white) << coord_hash(row_target, col);
-        int index = coord_hash(row_target, col);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col].type != PIECE_TYPE_NONE) {
             break;
         }
     }
@@ -403,65 +412,120 @@ uint64_t _visible_to_queen(int row, int col) {
 
     for (int col_target = col - 1; col_target >= 0; --col_target) {
         result |= (uint64_t)can_access_square_unchecked(row, col_target, is_white) << coord_hash(row, col_target);
-        int index = coord_hash(row, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int col_target = col + 1; col_target < NUM_COLS; ++col_target) {
         result |= (uint64_t)can_access_square_unchecked(row, col_target, is_white) << coord_hash(row, col_target);
-        int index = coord_hash(row, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row - 1; row_target >= 0; --row_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col, is_white) << coord_hash(row_target, col);
-        int index = coord_hash(row_target, col);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row + 1; row_target < NUM_ROWS; ++row_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col, is_white) << coord_hash(row_target, col);
-        int index = coord_hash(row_target, col);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row + 1, col_target = col + 1; row_target < NUM_ROWS && col_target < NUM_COLS; ++row_target, ++col_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col_target, is_white) << coord_hash(row_target, col_target);
-        int index = coord_hash(row_target, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row + 1, col_target = col - 1; row_target < NUM_ROWS && col_target >= 0; ++row_target, --col_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col_target, is_white) << coord_hash(row_target, col_target);
-        int index = coord_hash(row_target, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row - 1, col_target = col + 1; row_target >= 0 && col_target < NUM_COLS; --row_target, ++col_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col_target, is_white) << coord_hash(row_target, col_target);
-        int index = coord_hash(row_target, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col_target].type != PIECE_TYPE_NONE) {
             break;
         }
     }
 
     for (int row_target = row - 1, col_target = col - 1; row_target >= 0 && col_target >= 0; --row_target, --col_target) {
         result |= (uint64_t)can_access_square_unchecked(row_target, col_target, is_white) << coord_hash(row_target, col_target);
-        int index = coord_hash(row_target, col_target);
-        if (global_context.piece_state.grid[row][col].type == PIECE_TYPE_NONE) {
+        if (global_context.piece_state.grid[row_target][col_target].type != PIECE_TYPE_NONE) {
             break;
+        }
+    }
+
+    return result;
+}
+
+uint64_t _visible_to_king_ignore_other_king(int row, int col) {
+    SDL_assert(row >= 0 && row < NUM_ROWS && col >= 0 && col < NUM_COLS);
+    SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_BLACK);
+
+    uint64_t result = {0};
+
+    bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE;
+
+    int row_positive = row + 1;
+    int row_negative = row - 1;
+    int col_positive = col + 1;
+    int col_negative = col - 1;
+
+    result |= (uint64_t)can_access_square(row_negative, col_negative, is_white) << coord_hash(row_negative, col_negative);
+    result |= (uint64_t)can_access_square(row_negative, col         , is_white) << coord_hash(row_negative, col         );
+    result |= (uint64_t)can_access_square(row_negative, col_positive, is_white) << coord_hash(row_negative, col_positive);
+    result |= (uint64_t)can_access_square(row         , col_negative, is_white) << coord_hash(row         , col_negative);
+    result |= (uint64_t)can_access_square(row         , col_positive, is_white) << coord_hash(row         , col_positive);
+    result |= (uint64_t)can_access_square(row_positive, col_negative, is_white) << coord_hash(row_positive, col_negative);
+    result |= (uint64_t)can_access_square(row_positive, col         , is_white) << coord_hash(row_positive, col         );
+    result |= (uint64_t)can_access_square(row_positive, col_positive, is_white) << coord_hash(row_positive, col_positive);
+
+    for (int row_other = 0; row_other < NUM_ROWS; ++row_other) {
+        for (int col_other = 0; col_other < NUM_COLS; ++col_other) {
+            switch (global_context.piece_state.grid[row_other][col_other].type) {
+            case PIECE_TYPE_NONE:
+            case PIECE_TYPE_KING_WHITE:
+            case PIECE_TYPE_KING_BLACK:
+                break;
+            case PIECE_TYPE_PAWN_WHITE:
+                result &= ~(is_white ? 0ull : _controlled_by_pawn(row_other, col_other));
+                break;   
+            case PIECE_TYPE_PAWN_BLACK:
+                result &= ~(is_white ? _controlled_by_pawn(row_other, col_other) : 0ull);
+                break;
+            case PIECE_TYPE_BISHOP_WHITE:
+                result &= ~(is_white ? 0ull : _visible_to_bishop(row_other, col_other));
+                break;
+            case PIECE_TYPE_BISHOP_BLACK:
+                result &= ~(is_white ? _visible_to_bishop(row_other, col_other) : 0ull);
+                break;
+            case PIECE_TYPE_ROOK_WHITE:
+                result &= ~(is_white ? 0ull : _visible_to_rook(row_other, col_other));
+                break;
+            case PIECE_TYPE_ROOK_BLACK:
+                result &= ~(is_white ? _visible_to_rook(row_other, col_other) : 0ull);
+                break;
+            case PIECE_TYPE_QUEEN_WHITE:
+                result &= ~(is_white ? 0ull : _visible_to_queen(row_other, col_other));
+                break;
+            case PIECE_TYPE_QUEEN_BLACK:
+                result &= ~(is_white ? _visible_to_queen(row_other, col_other) : 0ull);
+                break;                
+            default:
+                __builtin_unreachable();
+                break;
+            }
         }
     }
 
@@ -471,20 +535,66 @@ uint64_t _visible_to_queen(int row, int col) {
 uint64_t _visible_to_king(int row, int col) {
     SDL_assert(row >= 0 && row < NUM_ROWS && col >= 0 && col < NUM_COLS);
     SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_BLACK);
-    SDL_assert(global_context.highlight_state == 0ull);
 
     uint64_t result = {0};
 
     bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE;
 
-    result |= (uint64_t)can_access_square(row - 1, col - 1, is_white) << coord_hash(row - 1, col - 1);
-    result |= (uint64_t)can_access_square(row - 1, col    , is_white) << coord_hash(row - 1, col    );
-    result |= (uint64_t)can_access_square(row - 1, col + 1, is_white) << coord_hash(row - 1, col + 1);
-    result |= (uint64_t)can_access_square(row    , col - 1, is_white) << coord_hash(row    , col - 1);
-    result |= (uint64_t)can_access_square(row    , col + 1, is_white) << coord_hash(row    , col + 1);
-    result |= (uint64_t)can_access_square(row + 1, col - 1, is_white) << coord_hash(row + 1, col - 1);
-    result |= (uint64_t)can_access_square(row + 1, col    , is_white) << coord_hash(row + 1, col    );
-    result |= (uint64_t)can_access_square(row + 1, col + 1, is_white) << coord_hash(row + 1, col + 1);
+    int row_positive = row + 1;
+    int row_negative = row - 1;
+    int col_positive = col + 1;
+    int col_negative = col - 1;
+
+    result |= (uint64_t)can_access_square(row_negative, col_negative, is_white) << coord_hash(row_negative, col_negative);
+    result |= (uint64_t)can_access_square(row_negative, col         , is_white) << coord_hash(row_negative, col         );
+    result |= (uint64_t)can_access_square(row_negative, col_positive, is_white) << coord_hash(row_negative, col_positive);
+    result |= (uint64_t)can_access_square(row         , col_negative, is_white) << coord_hash(row         , col_negative);
+    result |= (uint64_t)can_access_square(row         , col_positive, is_white) << coord_hash(row         , col_positive);
+    result |= (uint64_t)can_access_square(row_positive, col_negative, is_white) << coord_hash(row_positive, col_negative);
+    result |= (uint64_t)can_access_square(row_positive, col         , is_white) << coord_hash(row_positive, col         );
+    result |= (uint64_t)can_access_square(row_positive, col_positive, is_white) << coord_hash(row_positive, col_positive);
+
+    for (int row_other = 0; row_other < NUM_ROWS; ++row_other) {
+        for (int col_other = 0; col_other < NUM_COLS; ++col_other) {
+            switch (global_context.piece_state.grid[row_other][col_other].type) {
+            case PIECE_TYPE_NONE:
+                break;
+            case PIECE_TYPE_PAWN_WHITE:
+                result &= ~(is_white ? 0ull : _controlled_by_pawn(row_other, col_other));
+                break;   
+            case PIECE_TYPE_PAWN_BLACK:
+                result &= ~(is_white ? _controlled_by_pawn(row_other, col_other) : 0ull);
+                break;
+            case PIECE_TYPE_BISHOP_WHITE:
+                result &= ~(is_white ? 0ull : _visible_to_bishop(row_other, col_other));
+                break;
+            case PIECE_TYPE_BISHOP_BLACK:
+                result &= ~(is_white ? _visible_to_bishop(row_other, col_other) : 0ull);
+                break;
+            case PIECE_TYPE_ROOK_WHITE:
+                result &= ~(is_white ? 0ull : _visible_to_rook(row_other, col_other));
+                break;
+            case PIECE_TYPE_ROOK_BLACK:
+                result &= ~(is_white ? _visible_to_rook(row_other, col_other) : 0ull);
+                break;
+            case PIECE_TYPE_QUEEN_WHITE:
+                result &= ~(is_white ? 0ull : _visible_to_queen(row_other, col_other));
+                break;
+            case PIECE_TYPE_QUEEN_BLACK:
+                result &= ~(is_white ? _visible_to_queen(row_other, col_other) : 0ull);
+                break;
+            case PIECE_TYPE_KING_WHITE:
+                result &= ~(is_white ? 0ull : _visible_to_king_ignore_other_king(row_other, col_other));
+                break;
+            case PIECE_TYPE_KING_BLACK:
+                result &= ~(is_white ? _visible_to_king_ignore_other_king(row_other, col_other) : 0ull);
+                break;
+            default:
+                __builtin_unreachable();
+                break;
+            }
+        }
+    }
 
     return result;
 }
@@ -494,9 +604,6 @@ uint64_t visible_square_mask(int row, int col) {
     if (coord_in_bounds(row, col)) {
         PieceType piece = global_context.piece_state.grid[row][col].type;
         switch (piece) {
-        default:
-            __builtin_unreachable();
-            break;
         case PIECE_TYPE_NONE:
             break;
         case PIECE_TYPE_PAWN_WHITE:
@@ -522,6 +629,9 @@ uint64_t visible_square_mask(int row, int col) {
         case PIECE_TYPE_KING_WHITE:
         case PIECE_TYPE_KING_BLACK:
             result = _visible_to_king(row, col);
+            break;
+        default:
+            __builtin_unreachable();
             break;
         }
     }
