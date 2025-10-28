@@ -107,11 +107,6 @@ void _context_init_board_state() {
     global_context.piece_state.grid[7][5].type = PIECE_TYPE_BISHOP_WHITE;
     global_context.piece_state.grid[7][6].type = PIECE_TYPE_KNIGHT_WHITE;
     global_context.piece_state.grid[7][7].type = PIECE_TYPE_ROOK_WHITE;
-
-    // debug
-
-    global_context.piece_state.grid[4][3].type = PIECE_TYPE_KING_WHITE;
-    global_context.piece_state.grid[2][4].type = PIECE_TYPE_KING_BLACK;
 }
 
 bool context_initialise() {
