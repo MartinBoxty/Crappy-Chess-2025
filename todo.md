@@ -19,12 +19,12 @@
   - **Completed:**
     - Knight
     - Bishop
-    - Rook
     - Queen
   - **In-Progress:**
     - Pawn
       - En passant not implemented
-    - King highlighting
+    - King + Rook
+      - Castling logic
   - **Not started:**
     - Options available when king is in check
 
