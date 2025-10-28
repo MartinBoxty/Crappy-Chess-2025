@@ -107,6 +107,11 @@ void _context_init_board_state() {
     global_context.piece_state.grid[7][5].type = PIECE_TYPE_BISHOP_WHITE;
     global_context.piece_state.grid[7][6].type = PIECE_TYPE_KNIGHT_WHITE;
     global_context.piece_state.grid[7][7].type = PIECE_TYPE_ROOK_WHITE;
+
+    // debug
+
+    global_context.piece_state.grid[4][3].type = PIECE_TYPE_KING_WHITE;
+    global_context.piece_state.grid[2][4].type = PIECE_TYPE_KING_BLACK;
 }
 
 bool context_initialise() {
@@ -279,8 +284,8 @@ uint64_t _controlled_by_pawn(int row, int col) {
     int col_positive = col + 1;
     int col_negative = col - 1;
 
-    result |= (uint64_t)can_access_square(row_next, col_positive, is_white) << coord_hash(row_next, col_positive);
-    result |= (uint64_t)can_access_square(row_next, col_negative, is_white) << coord_hash(row_next, col_negative);
+    result |= (uint64_t)coord_in_bounds(row_next, col_positive) << coord_hash(row_next, col_positive);
+    result |= (uint64_t)coord_in_bounds(row_next, col_negative) << coord_hash(row_next, col_negative);
     
     return result;
 }
@@ -469,62 +474,69 @@ uint64_t _visible_to_queen(int row, int col) {
     return result;
 }
 
-uint64_t _visible_to_king_ignore_other_king(int row, int col) {
-    SDL_assert(row >= 0 && row < NUM_ROWS && col >= 0 && col < NUM_COLS);
-    SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_BLACK);
-
+uint64_t _attacked_by_king_mask(int row, int col, bool is_white) {
     uint64_t result = {0};
-
-    bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE;
 
     int row_positive = row + 1;
     int row_negative = row - 1;
     int col_positive = col + 1;
     int col_negative = col - 1;
 
-    result |= (uint64_t)can_access_square(row_negative, col_negative, is_white) << coord_hash(row_negative, col_negative);
-    result |= (uint64_t)can_access_square(row_negative, col         , is_white) << coord_hash(row_negative, col         );
-    result |= (uint64_t)can_access_square(row_negative, col_positive, is_white) << coord_hash(row_negative, col_positive);
-    result |= (uint64_t)can_access_square(row         , col_negative, is_white) << coord_hash(row         , col_negative);
-    result |= (uint64_t)can_access_square(row         , col_positive, is_white) << coord_hash(row         , col_positive);
-    result |= (uint64_t)can_access_square(row_positive, col_negative, is_white) << coord_hash(row_positive, col_negative);
-    result |= (uint64_t)can_access_square(row_positive, col         , is_white) << coord_hash(row_positive, col         );
-    result |= (uint64_t)can_access_square(row_positive, col_positive, is_white) << coord_hash(row_positive, col_positive);
+    result |= 1ull << coord_hash(row_negative, col_negative);
+    result |= 1ull << coord_hash(row_negative, col         );
+    result |= 1ull << coord_hash(row_negative, col_positive);
+    result |= 1ull << coord_hash(row         , col_negative);
+    result |= 1ull << coord_hash(row         , col_positive);
+    result |= 1ull << coord_hash(row_positive, col_negative);
+    result |= 1ull << coord_hash(row_positive, col         );
+    result |= 1ull << coord_hash(row_positive, col_positive);
+    
+    return result;
+}
 
-    for (int row_other = 0; row_other < NUM_ROWS; ++row_other) {
-        for (int col_other = 0; col_other < NUM_COLS; ++col_other) {
-            switch (global_context.piece_state.grid[row_other][col_other].type) {
+uint64_t _inaccessible_to_king_mask(int row, int col, int is_white) {
+    uint64_t result = {0};
+
+    for (int row = 0; row < NUM_ROWS; ++row) {
+        for (int col = 0; col < NUM_COLS; ++col) {
+            switch (global_context.piece_state.grid[row][col].type) {
             case PIECE_TYPE_NONE:
-            case PIECE_TYPE_KING_WHITE:
-            case PIECE_TYPE_KING_BLACK:
                 break;
             case PIECE_TYPE_PAWN_WHITE:
-                result &= ~(is_white ? 0ull : _controlled_by_pawn(row_other, col_other));
-                break;   
+                result |= is_white ? 1ull << coord_hash(row, col) : _controlled_by_pawn(row, col);
+                break;
             case PIECE_TYPE_PAWN_BLACK:
-                result &= ~(is_white ? _controlled_by_pawn(row_other, col_other) : 0ull);
+                result |= is_white ? _controlled_by_pawn(row, col) : 1ull << coord_hash(row, col);
+                break;
+            case PIECE_TYPE_KNIGHT_WHITE:
+                result |= is_white ? 1ull << coord_hash(row, col) : _visible_to_knight(row, col);
+                break;
+            case PIECE_TYPE_KNIGHT_BLACK:
+                result |= is_white ? _visible_to_knight(row, col) : 1ull << coord_hash(row, col);
                 break;
             case PIECE_TYPE_BISHOP_WHITE:
-                result &= ~(is_white ? 0ull : _visible_to_bishop(row_other, col_other));
+                result |= is_white ? 1ull << coord_hash(row, col) : _visible_to_bishop(row, col);
                 break;
             case PIECE_TYPE_BISHOP_BLACK:
-                result &= ~(is_white ? _visible_to_bishop(row_other, col_other) : 0ull);
+                result |= is_white ? _visible_to_bishop(row, col) : 1ull << coord_hash(row, col);
                 break;
             case PIECE_TYPE_ROOK_WHITE:
-                result &= ~(is_white ? 0ull : _visible_to_rook(row_other, col_other));
+                result |= is_white ? 1ull << coord_hash(row, col) : _visible_to_rook(row, col);
                 break;
             case PIECE_TYPE_ROOK_BLACK:
-                result &= ~(is_white ? _visible_to_rook(row_other, col_other) : 0ull);
+                result |= is_white ? _visible_to_rook(row, col) : 1ull << coord_hash(row, col);
                 break;
             case PIECE_TYPE_QUEEN_WHITE:
-                result &= ~(is_white ? 0ull : _visible_to_queen(row_other, col_other));
+                result |= is_white ? 1ull << coord_hash(row, col) : _visible_to_queen(row, col);
                 break;
             case PIECE_TYPE_QUEEN_BLACK:
-                result &= ~(is_white ? _visible_to_queen(row_other, col_other) : 0ull);
-                break;                
-            default:
-                __builtin_unreachable();
+                result |= is_white ? _visible_to_queen(row, col) : 1ull << coord_hash(row, col);
                 break;
+            case PIECE_TYPE_KING_WHITE:
+                result |= is_white ? 1ull << coord_hash(row, col) : _attacked_by_king_mask(row, col, is_white);
+                break;
+            case PIECE_TYPE_KING_BLACK:
+                result |= is_white ? _attacked_by_king_mask(row, col, !is_white) : 1ull << coord_hash(row, col);
             }
         }
     }
@@ -536,71 +548,14 @@ uint64_t _visible_to_king(int row, int col) {
     SDL_assert(row >= 0 && row < NUM_ROWS && col >= 0 && col < NUM_COLS);
     SDL_assert(global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE || global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_BLACK);
 
-    uint64_t result = {0};
-
     bool is_white = global_context.piece_state.grid[row][col].type == PIECE_TYPE_KING_WHITE;
 
-    int row_positive = row + 1;
-    int row_negative = row - 1;
-    int col_positive = col + 1;
-    int col_negative = col - 1;
-
-    result |= (uint64_t)can_access_square(row_negative, col_negative, is_white) << coord_hash(row_negative, col_negative);
-    result |= (uint64_t)can_access_square(row_negative, col         , is_white) << coord_hash(row_negative, col         );
-    result |= (uint64_t)can_access_square(row_negative, col_positive, is_white) << coord_hash(row_negative, col_positive);
-    result |= (uint64_t)can_access_square(row         , col_negative, is_white) << coord_hash(row         , col_negative);
-    result |= (uint64_t)can_access_square(row         , col_positive, is_white) << coord_hash(row         , col_positive);
-    result |= (uint64_t)can_access_square(row_positive, col_negative, is_white) << coord_hash(row_positive, col_negative);
-    result |= (uint64_t)can_access_square(row_positive, col         , is_white) << coord_hash(row_positive, col         );
-    result |= (uint64_t)can_access_square(row_positive, col_positive, is_white) << coord_hash(row_positive, col_positive);
-
-    for (int row_other = 0; row_other < NUM_ROWS; ++row_other) {
-        for (int col_other = 0; col_other < NUM_COLS; ++col_other) {
-            switch (global_context.piece_state.grid[row_other][col_other].type) {
-            case PIECE_TYPE_NONE:
-                break;
-            case PIECE_TYPE_PAWN_WHITE:
-                result &= ~(is_white ? 0ull : _controlled_by_pawn(row_other, col_other));
-                break;   
-            case PIECE_TYPE_PAWN_BLACK:
-                result &= ~(is_white ? _controlled_by_pawn(row_other, col_other) : 0ull);
-                break;
-            case PIECE_TYPE_BISHOP_WHITE:
-                result &= ~(is_white ? 0ull : _visible_to_bishop(row_other, col_other));
-                break;
-            case PIECE_TYPE_BISHOP_BLACK:
-                result &= ~(is_white ? _visible_to_bishop(row_other, col_other) : 0ull);
-                break;
-            case PIECE_TYPE_ROOK_WHITE:
-                result &= ~(is_white ? 0ull : _visible_to_rook(row_other, col_other));
-                break;
-            case PIECE_TYPE_ROOK_BLACK:
-                result &= ~(is_white ? _visible_to_rook(row_other, col_other) : 0ull);
-                break;
-            case PIECE_TYPE_QUEEN_WHITE:
-                result &= ~(is_white ? 0ull : _visible_to_queen(row_other, col_other));
-                break;
-            case PIECE_TYPE_QUEEN_BLACK:
-                result &= ~(is_white ? _visible_to_queen(row_other, col_other) : 0ull);
-                break;
-            case PIECE_TYPE_KING_WHITE:
-                result &= ~(is_white ? 0ull : _visible_to_king_ignore_other_king(row_other, col_other));
-                break;
-            case PIECE_TYPE_KING_BLACK:
-                result &= ~(is_white ? _visible_to_king_ignore_other_king(row_other, col_other) : 0ull);
-                break;
-            default:
-                __builtin_unreachable();
-                break;
-            }
-        }
-    }
-
-    return result;
+    return _attacked_by_king_mask(row, col, is_white) & ~_inaccessible_to_king_mask(row, col, is_white);
 }
 
 uint64_t visible_square_mask(int row, int col) {
     uint64_t result = {0};
+
     if (coord_in_bounds(row, col)) {
         PieceType piece = global_context.piece_state.grid[row][col].type;
         switch (piece) {
@@ -628,13 +583,14 @@ uint64_t visible_square_mask(int row, int col) {
             break;
         case PIECE_TYPE_KING_WHITE:
         case PIECE_TYPE_KING_BLACK:
-            result = _visible_to_king(row, col);
+            result = _visible_to_king_v2(row, col);
             break;
         default:
             __builtin_unreachable();
             break;
         }
     }
+
     return result;
 }
 
