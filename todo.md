@@ -25,7 +25,8 @@
     - Pawn
       - En passant not implemented
     - King highlighting
-      - Can still access squares that are controlled by opposing piece vision
+  - **Not started:**
+    - Options available when king is in check
 
 ## Complete
 - Rendering grid based on program state
